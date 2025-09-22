@@ -101,10 +101,10 @@
 		BEE8D78F2E815AFF005C608B = {
 			isa = PBXGroup;
 			children = (
-				BEE8D7A02E815B00005C608B /* nexzy-watch Watch App */,
 				BEE8D7AE2E815B03005C608B /* nexzy-watch Watch AppTests */,
 				BEE8D7B82E815B03005C608B /* nexzy-watch Watch AppUITests */,
 				BEE8D7972E815B00005C608B /* Products */,
+				BEE8D7A02E815B00005C608B /* nexzy-watch Watch App */,
 			);
 			sourceTree = "<group>";
 		};

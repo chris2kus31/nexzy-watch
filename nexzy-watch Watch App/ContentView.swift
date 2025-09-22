@@ -1,24 +1,38 @@
-//
-//  ContentView.swift
-//  nexzy-watch Watch App
-//
-//  Created by Christopher Moreno on 9/22/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var authManager = AuthManager.shared
+    @State private var isValidating = true
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            if isValidating {
+                // Splash screen while checking auth
+                SplashView()
+            } else if authManager.isAuthenticated {
+                MainView()
+            } else {
+                PairingView()
+            }
         }
-        .padding()
+        .task {
+            await validateSession()
+        }
     }
-}
-
-#Preview {
-    ContentView()
+    
+    private func validateSession() async {
+        // Check if we have stored tokens
+        if await authManager.getAuthToken() != nil {
+            // Validate with backend
+            let isValid = await authManager.validateSession()
+            if !isValid {
+                // Invalid session, need to re-pair
+                await authManager.logout()
+            }
+        }
+        
+        withAnimation {
+            isValidating = false
+        }
+    }
 }

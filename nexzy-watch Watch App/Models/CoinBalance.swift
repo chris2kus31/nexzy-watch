@@ -2,6 +2,10 @@
 //  CoinBalance.swift
 //  nexzy-watch
 //
-//  Created by Christopher Moreno on 9/22/25.
-//
 
+import Foundation
+
+struct CoinBalanceResponse: Decodable {
+    let balance: Int
+    let dailyBonusAvailable: Bool?
+}
