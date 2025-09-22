@@ -12,156 +12,117 @@ struct MainView: View {
     @State private var coinBalance = 0
     @State private var currentGame: GameData?
     @State private var isListening = false
-    @State private var transcribedText = ""
+    @State private var showMenu = false
     @State private var showGameLibrary = false
     @State private var showChatHistory = false
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Dark background
-                Color(hex: "0F172A")
+                // White background like ChatGPT
+                Color.white
                     .ignoresSafeArea()
                 
-                VStack(spacing: 16) {
-                    // Top Bar - Coins
+                VStack(spacing: 0) {
+                    // Top Bar with proper spacing
                     HStack {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .foregroundColor(Color(hex: "FFC107"))
-                            .font(.system(size: 14))
-                        
-                        Text("\(coinBalance)")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
+                        // Hamburger menu - smaller
+                        Button(action: {
+                            showMenu = true
+                        }) {
+                            Image(systemName: "line.horizontal.3")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(Color(hex: "0F172A"))
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .frame(width: 30, height: 30)
                         
                         Spacer()
                         
-                        // Menu button
-                        Button(action: {
-                            showChatHistory = true
-                        }) {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .foregroundColor(.white.opacity(0.7))
-                                .font(.system(size: 18))
+                        // Coin balance - moved left to avoid time
+                        HStack(spacing: 3) {
+                            Image(systemName: "dollarsign.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "FFC107"))
+                            Text("\(coinBalance)")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(Color(hex: "0F172A"))
                         }
+                        .padding(.trailing, 20) // Keep away from time
                     }
-                    .padding(.horizontal)
-                    .padding(.top)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 15)
                     
-                    // Current Game Context
-                    if let game = currentGame {
-                        HStack {
-                            Image(systemName: "gamecontroller.fill")
-                                .foregroundColor(Color(hex: "3B82F6"))
-                                .font(.system(size: 12))
-                            
-                            Text(game.name)
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.8))
-                                .lineLimit(1)
-                            
-                            Button(action: {
-                                currentGame = nil
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.white.opacity(0.5))
-                                    .font(.system(size: 12))
-                            }
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(15)
+                    // Tagline with mic icon - using Nexzy colors
+                    HStack(spacing: 6) {
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color(hex: "3B82F6"))
+                        Text("Tap to Nexzy")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(Color(hex: "0F172A"))
                     }
+                    .padding(.bottom, 25)
                     
-                    Spacer()
-                    
-                    // Main Microphone Button
-                    ZStack {
-                        // Pulse animation when listening
-                        if isListening {
+                    // Main Nexzy Logo Button - responsive size with Nexzy blue
+                    Button(action: {
+                        toggleListening()
+                    }) {
+                        ZStack {
                             Circle()
-                                .stroke(Color(hex: "3B82F6"), lineWidth: 2)
-                                .scaleEffect(isListening ? 1.5 : 1.0)
-                                .opacity(isListening ? 0 : 1)
-                                .animation(
-                                    .easeOut(duration: 1.0)
-                                    .repeatForever(autoreverses: false),
-                                    value: isListening
-                                )
-                        }
-                        
-                        Button(action: {
-                            toggleListening()
-                        }) {
-                            ZStack {
+                                .fill(isListening ? Color.red : Color(hex: "3B82F6"))
+                                .frame(width: 85, height: 85)
+                            
+                            // Nexzy lightning bolt logo
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.white)
+                                .rotationEffect(.degrees(isListening ? 0 : -10))
+                                .animation(.easeInOut(duration: 0.3), value: isListening)
+                            
+                            // Pulse effect when listening
+                            if isListening {
                                 Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: isListening ?
-                                                [Color(hex: "EF4444"), Color(hex: "DC2626")] :
-                                                [Color(hex: "3B82F6"), Color(hex: "2563EB")],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
+                                    .stroke(Color.red.opacity(0.3), lineWidth: 2)
+                                    .scaleEffect(isListening ? 1.4 : 1.0)
+                                    .opacity(isListening ? 0 : 1)
+                                    .animation(
+                                        .easeInOut(duration: 1.5).repeatForever(autoreverses: false),
+                                        value: isListening
                                     )
-                                    .frame(width: 80, height: 80)
-                                
-                                Image(systemName: isListening ? "stop.fill" : "mic.fill")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 30))
+                                    .frame(width: 85, height: 85)
                             }
                         }
-                        .scaleEffect(isListening ? 0.95 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: isListening)
                     }
-                    
-                    // Listening indicator
-                    if isListening {
-                        Text("Listening...")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                            .transition(.opacity)
-                    } else {
-                        Text(currentGame != nil ? "Ask about \(currentGame!.name)" : "Ask anything...")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.5))
-                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .scaleEffect(isListening ? 0.95 : 1.0)
+                    .animation(.easeInOut(duration: 0.2), value: isListening)
                     
                     Spacer()
                     
-                    // Bottom action buttons
-                    HStack(spacing: 30) {
-                        // Game Library
+                    // Bottom arrow - clean without overlay
+                    VStack(spacing: 0) {
                         Button(action: {
-                            showGameLibrary = true
+                            // TODO: Show recent chats
                         }) {
-                            VStack(spacing: 4) {
-                                Image(systemName: "gamecontroller")
-                                    .font(.system(size: 20))
-                                Text("Games")
-                                    .font(.caption2)
-                            }
-                            .foregroundColor(.white.opacity(0.7))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(Color(hex: "3B82F6").opacity(0.5))
                         }
-                        
-                        // Settings
-                        Button(action: {
-                            // Show settings
-                        }) {
-                            VStack(spacing: 4) {
-                                Image(systemName: "gearshape")
-                                    .font(.system(size: 20))
-                                Text("Settings")
-                                    .font(.caption2)
-                            }
-                            .foregroundColor(.white.opacity(0.7))
-                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .frame(width: 40, height: 30)
                     }
-                    .padding(.bottom)
+                    .padding(.bottom, 15)
                 }
             }
             .navigationBarHidden(true)
+        }
+        .sheet(isPresented: $showMenu) {
+            MenuView(
+                showGameLibrary: $showGameLibrary,
+                showChatHistory: $showChatHistory
+            )
         }
         .sheet(isPresented: $showGameLibrary) {
             GameLibraryView(selectedGame: $currentGame)
@@ -189,21 +150,128 @@ struct MainView: View {
     private func startListening() {
         // TODO: Implement speech recognition
         print("Starting speech recognition...")
+        WKInterfaceDevice.current().play(.start)
     }
     
     private func stopListening() {
         // TODO: Stop speech recognition and process
         print("Stopping speech recognition...")
+        WKInterfaceDevice.current().play(.stop)
     }
     
     private func loadCoinBalance() async {
         do {
             let response = try await APIService.shared.getCoinBalance()
             await MainActor.run {
-                self.coinBalance = response.balance
+                self.coinBalance = response.coins
             }
         } catch {
             print("Failed to load coin balance: \(error)")
+        }
+    }
+}
+
+// Menu View
+struct MenuView: View {
+    @Environment(\.dismiss) var dismiss
+    @Binding var showGameLibrary: Bool
+    @Binding var showChatHistory: Bool
+    @StateObject private var authManager = AuthManager.shared
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Menu")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.white.opacity(0.7))
+                            .font(.system(size: 16))
+                    }
+                }
+                .padding()
+                .background(Color(hex: "0F172A"))
+                
+                // Menu items
+                VStack(spacing: 0) {
+                    // Game Library
+                    MenuRow(
+                        icon: "gamecontroller",
+                        title: "Games",
+                        action: {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                showGameLibrary = true
+                            }
+                        }
+                    )
+                    
+                    Divider()
+                    
+                    // Chat History
+                    MenuRow(
+                        icon: "clock",
+                        title: "History",
+                        action: {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                showChatHistory = true
+                            }
+                        }
+                    )
+                    
+                    Divider()
+                    
+                    // Unpair
+                    MenuRow(
+                        icon: "link.badge.minus",
+                        title: "Unpair",
+                        titleColor: .red,
+                        action: {
+                            Task {
+                                try? await authManager.unpairWatch()
+                            }
+                        }
+                    )
+                    
+                    Spacer()
+                }
+                .background(Color(hex: "1A1F2E"))
+            }
+        }
+    }
+}
+
+struct MenuRow: View {
+    let icon: String
+    let title: String
+    var titleColor: Color = .white
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(titleColor.opacity(0.8))
+                    .frame(width: 24)
+                
+                Text(title)
+                    .font(.system(size: 14))
+                    .foregroundColor(titleColor)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundColor(titleColor.opacity(0.3))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
     }
 }

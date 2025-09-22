@@ -113,6 +113,9 @@ struct PairingView: View {
     }
     
     private func pairWatch() async {
+        // Prevent multiple simultaneous attempts
+        guard !isLoading else { return }
+        
         await MainActor.run {
             isLoading = true
             errorMessage = ""
@@ -155,6 +158,7 @@ struct PairingView: View {
 struct CodeEntryView: View {
     @Binding var code: String
     @State private var tempCode = ""
+    @State private var isSubmitting = false  // Add flag to prevent multiple submits
     let onSubmit: (String) -> Void
     @Environment(\.dismiss) var dismiss
     
@@ -178,8 +182,9 @@ struct CodeEntryView: View {
                     let filtered = newValue.filter { $0.isNumber }
                     tempCode = String(filtered.prefix(6))
                     
-                    // Auto-submit when 6 digits entered
-                    if tempCode.count == 6 {
+                    // Auto-submit when 6 digits entered (only once)
+                    if tempCode.count == 6 && !isSubmitting {
+                        isSubmitting = true
                         // Small delay to allow UI to update
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             onSubmit(tempCode)
@@ -190,11 +195,13 @@ struct CodeEntryView: View {
             .font(.title2)
             .multilineTextAlignment(.center)
             .padding(.horizontal)
+            .disabled(isSubmitting)  // Disable input while submitting
             
             Spacer()
         }
         .onAppear {
             tempCode = code
+            isSubmitting = false
         }
     }
 }

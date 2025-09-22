@@ -60,7 +60,11 @@ class APIService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = Constants.apiTimeout
+        
+        // Debug log headers
+        print("📋 Request Headers: \(request.allHTTPHeaderFields ?? [:])")
         
         // Add auth token if needed
         if authenticated, let token = await AuthManager.shared.getAuthToken() {
@@ -74,7 +78,13 @@ class APIService: ObservableObject {
         
         // Add body if present
         if let body = body {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            do {
+                request.httpBody = try JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
+                print("📤 Request Body: \(String(data: request.httpBody!, encoding: .utf8) ?? "nil")")
+            } catch {
+                print("❌ Failed to serialize body: \(error)")
+                throw APIError.decodingError
+            }
         }
         
         do {
@@ -94,9 +104,12 @@ class APIService: ObservableObject {
             case 401:
                 // Try to parse specific error first
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                    print("❌ 401 Error: \(errorResponse.message)")
                     if errorResponse.message.contains("Invalid or expired") {
                         throw APIError.invalidCode
                     }
+                } else if let rawString = String(data: data, encoding: .utf8) {
+                    print("❌ 401 Raw Response: \(rawString)")
                 }
                 
                 // Token expired, try refresh if we're authenticated
@@ -126,12 +139,18 @@ class APIService: ObservableObject {
                 throw APIError.rateLimited(retryAfter: seconds)
                 
             default:
+                // Log the full error response for debugging
+                if let rawString = String(data: data, encoding: .utf8) {
+                    print("❌ Error \(httpResponse.statusCode): \(rawString)")
+                }
+                
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                     throw APIError.serverError(errorResponse.message)
                 }
                 throw APIError.serverError("Status code: \(httpResponse.statusCode)")
             }
         } catch {
+            print("❌ Request failed: \(error)")
             if error is APIError {
                 throw error
             }
@@ -145,6 +164,7 @@ class APIService: ObservableObject {
         let deviceId = await AuthManager.shared.getOrCreateDeviceId()
         let deviceName = "\(await getUsername())'s Apple Watch"
         
+        // Ensure body matches PairWatchDto structure exactly
         let body: [String: Any] = [
             "code": code,
             "deviceId": deviceId,
@@ -155,6 +175,14 @@ class APIService: ObservableObject {
                 "osVersion": "watchOS \(WKInterfaceDevice.current().systemVersion)"
             ]
         ]
+        
+        // Debug logging
+        print("📱 Pairing Request:")
+        print("  Code: \(code)")
+        print("  DeviceID: \(deviceId)")
+        print("  DeviceName: \(deviceName)")
+        print("  Endpoint: \(Constants.apiBaseURL)/auth/watch/pair")
+        print("  Body: \(body)")
         
         return try await request(
             endpoint: "/auth/watch/pair",
@@ -207,7 +235,8 @@ class APIService: ObservableObject {
     // MARK: - Game & Chat Endpoints
     
     func getCoinBalance() async throws -> CoinBalanceResponse {
-        return try await request(endpoint: "/user/coins")
+        // Updated endpoint to match your backend
+        return try await request(endpoint: "/auth/watch/coins", method: "GET")
     }
     
     func getUserGames() async throws -> UserGamesResponse {
