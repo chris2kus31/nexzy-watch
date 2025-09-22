@@ -264,6 +264,27 @@ class APIService: ObservableObject {
         )
     }
     
+    // MARK: - Chat History with Cursor Pagination
+    
+    func getQuestionHistory(
+        limit: Int = 10,
+        lastCreatedAt: String? = nil,
+        lastId: String? = nil
+    ) async throws -> QuestionHistoryResponse {
+        var endpoint = "/questions/all?limit=\(limit)"
+        
+        // Add cursor parameters if provided
+        if let lastCreatedAt = lastCreatedAt, let lastId = lastId {
+            endpoint += "&lastCreatedAt=\(lastCreatedAt)&lastId=\(lastId)"
+        }
+        
+        return try await request(
+            endpoint: endpoint,
+            method: "GET",
+            authenticated: true
+        )
+    }
+    
     // MARK: - Helper Methods
     
     private func getUsername() async -> String {
