@@ -15,8 +15,8 @@ struct PairingView: View {
     
     var body: some View {
         ZStack {
-            // Dark background
-            Color(hex: "0F172A")
+            // Dark background using Nexzy brand color
+            Color.nexzyDarkBg
                 .ignoresSafeArea()
             
             VStack(spacing: 15) {
@@ -25,7 +25,7 @@ struct PairingView: View {
                     .font(.system(size: 45))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color(hex: "3B82F6"), Color(hex: "60A5FA")],
+                            colors: [Color.nexzyBlue, Color.nexzyLightBlue],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -66,7 +66,7 @@ struct PairingView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
-                    .background(Color(hex: "3B82F6"))
+                    .background(Color.nexzyBlue)
                     .cornerRadius(20)
                 }
                 .sheet(isPresented: $showingCodeEntry) {
@@ -213,11 +213,11 @@ struct CodeDigitView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 6)
-                .stroke(Color(hex: "3B82F6"), lineWidth: 1.5)
+                .stroke(Color.nexzyBlue, lineWidth: 1.5)
                 .frame(width: 22, height: 30)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(digit.isEmpty ? Color.white.opacity(0.1) : Color(hex: "3B82F6").opacity(0.2))
+                        .fill(digit.isEmpty ? Color.white.opacity(0.1) : Color.nexzyBlue.opacity(0.2))
                 )
             
             Text(digit.isEmpty ? "•" : digit)
@@ -228,29 +228,4 @@ struct CodeDigitView: View {
     }
 }
 
-// Color extension
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-}
+// Note: Color extension moved to ColorExtension.swift to avoid duplicates

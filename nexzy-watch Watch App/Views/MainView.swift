@@ -19,101 +19,111 @@ struct MainView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // White background like ChatGPT
-                Color.white
+                // Navy background matching Nexzy logo
+                Color.nexzyNavy
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Top Bar with proper spacing
+                    // Top bar with hamburger menu - properly positioned
                     HStack {
-                        // Hamburger menu - smaller
+                        // Hamburger menu on left
                         Button(action: {
                             showMenu = true
                         }) {
                             Image(systemName: "line.horizontal.3")
                                 .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(Color(hex: "0F172A"))
+                                .foregroundColor(.white.opacity(0.8))
                         }
                         .buttonStyle(PlainButtonStyle())
                         .frame(width: 30, height: 30)
                         
                         Spacer()
-                        
-                        // Coin balance - moved left to avoid time
-                        HStack(spacing: 3) {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(Color(hex: "FFC107"))
-                            Text("\(coinBalance)")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(Color(hex: "0F172A"))
-                        }
-                        .padding(.trailing, 20) // Keep away from time
                     }
                     .padding(.horizontal, 12)
-                    .padding(.top, 8)
+                    .padding(.top, 8) // Back to original position
+                    .padding(.bottom, 10)
+                    
+                    // Coin balance bar - centered
+                    HStack(spacing: 4) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color.nexzyGold)
+                        Text("\(coinBalance)")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("coins")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(Color.white.opacity(0.15))
+                    )
                     .padding(.bottom, 15)
                     
-                    // Tagline with mic icon - using Nexzy colors
-                    HStack(spacing: 6) {
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color(hex: "3B82F6"))
-                        Text("Tap to Nexzy")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(Color(hex: "0F172A"))
-                    }
-                    .padding(.bottom, 25)
-                    
-                    // Main Nexzy Logo Button - responsive size with Nexzy blue
-                    Button(action: {
-                        toggleListening()
-                    }) {
-                        ZStack {
-                            Circle()
-                                .fill(isListening ? Color.red : Color(hex: "3B82F6"))
-                                .frame(width: 85, height: 85)
-                            
-                            // Nexzy lightning bolt logo
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 40))
-                                .foregroundColor(.white)
-                                .rotationEffect(.degrees(isListening ? 0 : -10))
-                                .animation(.easeInOut(duration: 0.3), value: isListening)
-                            
-                            // Pulse effect when listening
-                            if isListening {
+                    // Main Nexzy Logo Button - using PNG image
+                    VStack(spacing: 10) {
+                        Button(action: {
+                            toggleListening()
+                        }) {
+                            ZStack {
+                                // Background circle for tap area
                                 Circle()
-                                    .stroke(Color.red.opacity(0.3), lineWidth: 2)
-                                    .scaleEffect(isListening ? 1.4 : 1.0)
-                                    .opacity(isListening ? 0 : 1)
-                                    .animation(
-                                        .easeInOut(duration: 1.5).repeatForever(autoreverses: false),
-                                        value: isListening
-                                    )
-                                    .frame(width: 85, height: 85)
+                                    .fill(Color.clear)
+                                    .frame(width: 90, height: 90)
+                                
+                                // Your Nexzy logo PNG
+                                Image("Nexzy-logo") // Using your actual image name
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .opacity(isListening ? 0.9 : 1.0)
+                                
+                                // Pulse effect when listening
+                                if isListening {
+                                    Circle()
+                                        .stroke(Color.red.opacity(0.5), lineWidth: 3)
+                                        .scaleEffect(isListening ? 1.4 : 1.0)
+                                        .opacity(isListening ? 0 : 1)
+                                        .animation(
+                                            .easeInOut(duration: 1.5).repeatForever(autoreverses: false),
+                                            value: isListening
+                                        )
+                                        .frame(width: 80, height: 80)
+                                }
+                                
+                                // Optional: Red overlay when listening
+                                if isListening {
+                                    Circle()
+                                        .fill(Color.red.opacity(0.3))
+                                        .frame(width: 80, height: 80)
+                                }
                             }
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        .scaleEffect(isListening ? 0.95 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: isListening)
+                        
+                        // Status text below button
+                        Text(isListening ? "Listening..." : "Tap to speak")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(isListening ? Color.red.opacity(0.8) : Color.nexzyLightBlue.opacity(0.8))
+                    }
+                    
+                    Spacer(minLength: 10)
+                    
+                    // Bottom arrow - properly positioned
+                    Button(action: {
+                        showChatHistory = true
+                    }) {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color.nexzyLightBlue.opacity(0.4))
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .scaleEffect(isListening ? 0.95 : 1.0)
-                    .animation(.easeInOut(duration: 0.2), value: isListening)
-                    
-                    Spacer()
-                    
-                    // Bottom arrow - clean without overlay
-                    VStack(spacing: 0) {
-                        Button(action: {
-                            // TODO: Show recent chats
-                        }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(Color(hex: "3B82F6").opacity(0.5))
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .frame(width: 40, height: 30)
-                    }
-                    .padding(.bottom, 15)
+                    .padding(.bottom, 8) // Reduced padding to avoid bleeding
                 }
             }
             .navigationBarHidden(true)
@@ -194,7 +204,7 @@ struct MenuView: View {
                     }
                 }
                 .padding()
-                .background(Color(hex: "0F172A"))
+                .background(Color.nexzyDarkBg)
                 
                 // Menu items
                 VStack(spacing: 0) {
@@ -240,7 +250,7 @@ struct MenuView: View {
                     
                     Spacer()
                 }
-                .background(Color(hex: "1A1F2E"))
+                .background(Color.nexzyNavy)
             }
         }
     }
@@ -275,3 +285,5 @@ struct MenuRow: View {
         }
     }
 }
+
+// Note: Color extension moved to ColorExtension.swift to avoid duplicates
