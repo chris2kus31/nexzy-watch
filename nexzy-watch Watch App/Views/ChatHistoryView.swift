@@ -25,14 +25,14 @@ struct ChatHistoryView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Header
+                // Header - reduced padding
                 HStack {
                     Text("History")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .padding(.vertical, 6) // Reduced from 10
                 
                 if isLoading && historyItems.isEmpty {
                     // Initial loading
@@ -214,32 +214,29 @@ struct ChatHistoryRow: View {
     
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 // Title
                 Text(item.title)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 
-                // Time
-                HStack {
+                // Time with clock icon
+                HStack(spacing: 4) {
                     Image(systemName: "clock")
                         .font(.system(size: 10))
                     Text(item.relativeTime)
-                        .font(.system(size: 10))
+                        .font(.system(size: 11))
                 }
-                .foregroundColor(Color.nexzyLightBlue.opacity(0.7))
+                .foregroundColor(Color.nexzyLightBlue.opacity(0.6))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.white.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

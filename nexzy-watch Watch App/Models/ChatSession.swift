@@ -35,22 +35,11 @@ struct QuestionHistoryItem: Codable, Identifiable {
     
     var id: String { sessionId }
     
-    // Computed property to format date nicely
-    var formattedDate: String {
-        // Parse ISO date and format for display
-        let formatter = ISO8601DateFormatter()
-        if let date = formatter.date(from: createdAt) {
-            let displayFormatter = DateFormatter()
-            displayFormatter.dateStyle = .short
-            displayFormatter.timeStyle = .short
-            return displayFormatter.string(from: date)
-        }
-        return createdAt
-    }
-    
     // Computed property for relative time (e.g., "2 hours ago")
     var relativeTime: String {
         let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
         if let date = formatter.date(from: createdAt) {
             let interval = Date().timeIntervalSince(date)
             
@@ -58,15 +47,21 @@ struct QuestionHistoryItem: Codable, Identifiable {
                 return "Just now"
             } else if interval < 3600 {
                 let minutes = Int(interval / 60)
-                return "\(minutes) min ago"
+                return "\(minutes) min\(minutes == 1 ? "" : "s") ago"
             } else if interval < 86400 {
                 let hours = Int(interval / 3600)
-                return "\(hours) hour\(hours == 1 ? "" : "s") ago"
-            } else {
+                return "\(hours) hr\(hours == 1 ? "" : "s") ago"
+            } else if interval < 604800 {
                 let days = Int(interval / 86400)
                 return "\(days) day\(days == 1 ? "" : "s") ago"
+            } else if interval < 2592000 {
+                let weeks = Int(interval / 604800)
+                return "\(weeks) week\(weeks == 1 ? "" : "s") ago"
+            } else {
+                let months = Int(interval / 2592000)
+                return "\(months) month\(months == 1 ? "" : "s") ago"
             }
         }
-        return createdAt
+        return "Unknown"
     }
 }
