@@ -181,109 +181,146 @@ struct MainView: View {
     }
 }
 
-// Menu View
+// Menu View - Redesigned for watchOS
 struct MenuView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var showGameLibrary: Bool
     @Binding var showChatHistory: Bool
     @StateObject private var authManager = AuthManager.shared
+    @State private var showUnpairConfirm = false
     
     var body: some View {
-        NavigationView {
+        ZStack {
+            // Background
+            Color.nexzyNavy
+                .ignoresSafeArea()
+            
             VStack(spacing: 0) {
-                // Header
+                // Header - just the title
                 HStack {
                     Text("Menu")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
-                    Spacer()
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.white.opacity(0.7))
-                            .font(.system(size: 16))
-                    }
                 }
-                .padding()
-                .background(Color.nexzyDarkBg)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
                 
-                // Menu items
-                VStack(spacing: 0) {
-                    // Game Library
-                    MenuRow(
-                        icon: "gamecontroller",
-                        title: "Games",
-                        action: {
+                // Menu Options
+                ScrollView {
+                    VStack(spacing: 8) {
+                        // Games
+                        Button(action: {
                             dismiss()
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 showGameLibrary = true
                             }
+                        }) {
+                            HStack {
+                                Image(systemName: "gamecontroller.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(Color.nexzyLightBlue)
+                                    .frame(width: 24)
+                                
+                                Text("Games")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.white.opacity(0.1))
+                            )
                         }
-                    )
-                    
-                    Divider()
-                    
-                    // Chat History
-                    MenuRow(
-                        icon: "clock",
-                        title: "History",
-                        action: {
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // History
+                        Button(action: {
                             dismiss()
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 showChatHistory = true
                             }
-                        }
-                    )
-                    
-                    Divider()
-                    
-                    // Unpair
-                    MenuRow(
-                        icon: "link.badge.minus",
-                        title: "Unpair",
-                        titleColor: .red,
-                        action: {
-                            Task {
-                                try? await authManager.unpairWatch()
+                        }) {
+                            HStack {
+                                Image(systemName: "clock.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(Color.nexzyLightBlue)
+                                    .frame(width: 24)
+                                
+                                Text("History")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.white.opacity(0.3))
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.white.opacity(0.1))
+                            )
                         }
-                    )
-                    
-                    Spacer()
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // Divider
+                        Rectangle()
+                            .fill(Color.white.opacity(0.1))
+                            .frame(height: 1)
+                            .padding(.vertical, 4)
+                        
+                        // Unpair
+                        Button(action: {
+                            showUnpairConfirm = true
+                        }) {
+                            HStack {
+                                Image(systemName: "link.badge.minus")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.red)
+                                    .frame(width: 24)
+                                
+                                Text("Unpair")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.red.opacity(0.15))
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
                 }
-                .background(Color.nexzyNavy)
             }
+        }
+        .alert("Unpair Watch?", isPresented: $showUnpairConfirm) {
+            Button("Cancel", role: .cancel) { }
+            Button("Unpair", role: .destructive) {
+                Task {
+                    try? await authManager.unpairWatch()
+                }
+            }
+        } message: {
+            Text("You'll need to pair again from the mobile app")
         }
     }
 }
 
-struct MenuRow: View {
-    let icon: String
-    let title: String
-    var titleColor: Color = .white
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(titleColor.opacity(0.8))
-                    .frame(width: 24)
-                
-                Text(title)
-                    .font(.system(size: 14))
-                    .foregroundColor(titleColor)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12))
-                    .foregroundColor(titleColor.opacity(0.3))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-    }
-}
+// Remove the old MenuRow struct since we're not using it anymore
 
 // Note: Color extension moved to ColorExtension.swift to avoid duplicates
