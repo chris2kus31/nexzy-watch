@@ -21,107 +21,167 @@ struct GameLibraryView: View {
     let pageSize = 10
     
     var body: some View {
-        ZStack {
-            Color.nexzyNavy
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text("Games")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+        NavigationView {  // Wrap in NavigationView for navigation
+            ZStack {
+                Color.nexzyNavy
+                    .ignoresSafeArea()
                 
-                if isLoading && games.isEmpty {
-                    // Initial loading
-                    Spacer()
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(0.8)
-                    Spacer()
-                } else if games.isEmpty {
-                    // Empty state
-                    Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "gamecontroller")
-                            .font(.system(size: 32))
-                            .foregroundColor(.white.opacity(0.3))
-                        Text("No games yet")
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.5))
-                        Text("Add games on mobile")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.3))
+                VStack(spacing: 0) {
+                    // Header
+                    HStack {
+                        Text("Games")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
                     }
-                    Spacer()
-                } else {
-                    // Games list
-                    ScrollView {
-                        VStack(spacing: 8) {
-                            ForEach(games) { game in
-                                GameRowNew(game: game, isSelected: selectedGame?.id == game.id) {
-                                    // Convert WatchGameItem to GameData for compatibility
-                                    selectedGame = GameData(
-                                        id: game.id,
-                                        name: game.name,
-                                        platform: nil,
-                                        lastPlayed: nil
-                                    )
-                                    dismiss()
-                                }
-                            }
-                            
-                            // Load more section
-                            if hasMorePages {
-                                if isLoadingMore {
-                                    HStack {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .scaleEffect(0.6)
-                                        Text("Loading...")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.white.opacity(0.5))
-                                    }
-                                    .padding(.vertical, 10)
-                                } else {
-                                    Button(action: {
-                                        Task {
-                                            await loadMoreGames()
-                                        }
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "arrow.down.circle")
-                                                .font(.system(size: 14))
-                                            Text("Load more")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    
+                    if isLoading && games.isEmpty {
+                        // Initial loading
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                        Spacer()
+                    } else if games.isEmpty {
+                        // Empty state
+                        Spacer()
+                        VStack(spacing: 12) {
+                            Image(systemName: "gamecontroller")
+                                .font(.system(size: 32))
+                                .foregroundColor(.white.opacity(0.3))
+                            Text("No games yet")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text("Add games on mobile")
+                                .font(.system(size: 12))
+                                .foregroundColor(.white.opacity(0.3))
+                        }
+                        Spacer()
+                    } else {
+                        // Games list with NavigationLinks
+                        ScrollView {
+                            VStack(spacing: 8) {
+                                ForEach(games) { game in
+                                    NavigationLink(destination: GameDetailView(
+                                        gameId: game.id,
+                                        gameName: game.name
+                                    )) {
+                                        // Simple row view without button wrapper
+                                        HStack(spacing: 10) {
+                                            // Game Image
+                                            if let imageUrl = game.image {
+                                                AsyncImage(url: URL(string: imageUrl)) { phase in
+                                                    switch phase {
+                                                    case .success(let image):
+                                                        image
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fill)
+                                                            .frame(width: 40, height: 40)
+                                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                    case .failure(_), .empty:
+                                                        RoundedRectangle(cornerRadius: 8)
+                                                            .fill(Color.white.opacity(0.1))
+                                                            .frame(width: 40, height: 40)
+                                                            .overlay(
+                                                                Image(systemName: "gamecontroller.fill")
+                                                                    .font(.system(size: 16))
+                                                                    .foregroundColor(Color.nexzyLightBlue)
+                                                            )
+                                                    @unknown default:
+                                                        EmptyView()
+                                                    }
+                                                }
+                                            } else {
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(Color.white.opacity(0.1))
+                                                    .frame(width: 40, height: 40)
+                                                    .overlay(
+                                                        Image(systemName: "gamecontroller.fill")
+                                                            .font(.system(size: 16))
+                                                            .foregroundColor(Color.nexzyLightBlue)
+                                                    )
+                                            }
+                                            
+                                            // Game Info
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(game.name)
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(.white)
+                                                    .lineLimit(2)
+                                                    .multilineTextAlignment(.leading)
+                                                
+                                                // Status badge
+                                                Text(game.statusDisplay)
+                                                    .font(.system(size: 10))
+                                                    .foregroundColor(game.statusColor)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            // Navigation chevron instead of checkmark
+                                            Image(systemName: "chevron.right")
                                                 .font(.system(size: 12))
+                                                .foregroundColor(.white.opacity(0.3))
                                         }
-                                        .foregroundColor(Color.nexzyLightBlue)
+                                        .padding(8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .fill(Color.white.opacity(0.1))
+                                        )
                                     }
                                     .buttonStyle(PlainButtonStyle())
-                                    .padding(.vertical, 10)
+                                }
+                                
+                                // Load more section
+                                if hasMorePages {
+                                    if isLoadingMore {
+                                        HStack {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                .scaleEffect(0.6)
+                                            Text("Loading...")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.white.opacity(0.5))
+                                        }
+                                        .padding(.vertical, 10)
+                                    } else {
+                                        Button(action: {
+                                            Task {
+                                                await loadMoreGames()
+                                            }
+                                        }) {
+                                            HStack {
+                                                Image(systemName: "arrow.down.circle")
+                                                    .font(.system(size: 14))
+                                                Text("Load more")
+                                                    .font(.system(size: 12))
+                                            }
+                                            .foregroundColor(Color.nexzyLightBlue)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                        .padding(.vertical, 10)
+                                    }
                                 }
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.top, 8)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.top, 8)
+                    }
+                    
+                    // Error message if any
+                    if let error = errorMessage {
+                        Text(error)
+                            .font(.system(size: 11))
+                            .foregroundColor(.red)
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
                     }
                 }
-                
-                // Error message if any
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.system(size: 11))
-                        .foregroundColor(.red)
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                }
             }
-        }
-        .task {
-            await loadGames()
+            .task {
+                await loadGames()
+            }
         }
     }
     

@@ -76,3 +76,38 @@ struct WatchGameItem: Codable, Identifiable {
         }
     }
 }
+
+struct GameDetailResponse: Codable {
+    let id: String
+    let name: String
+    let image: String?
+    let released: String?
+    let platforms: [String]
+    let description: String?
+    let isInLibrary: Bool
+    let libraryStatus: String?
+    
+    // Format release date for display
+    var formattedReleaseDate: String {
+        guard let released = released else { return "TBA" }
+        
+        // Parse YYYY-MM-DD format
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        if let date = formatter.date(from: released) {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+        return released
+    }
+    
+    // Get platform string
+    var platformString: String {
+        if platforms.isEmpty {
+            return "Unknown"
+        }
+        return platforms.joined(separator: ", ")
+    }
+}

@@ -305,6 +305,14 @@ class APIService: ObservableObject {
         )
     }
     
+    func getGameDetails(gameId: String) async throws -> GameDetailResponse {
+        return try await request(
+            endpoint: "/auth/watch/game/\(gameId)",
+            method: "GET",
+            authenticated: true
+        )
+    }
+    
     // MARK: - Helper Methods
     
     private func getUsername() async -> String {
