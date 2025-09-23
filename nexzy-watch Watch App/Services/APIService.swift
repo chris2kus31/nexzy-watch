@@ -285,6 +285,26 @@ class APIService: ObservableObject {
         )
     }
     
+    func getWatchLibrary(
+        limit: Int = 10,
+        lastCreatedAt: String? = nil,
+        lastId: String? = nil
+    ) async throws -> WatchLibraryResponse {
+        var endpoint = "/auth/watch/library?limit=\(limit)"
+        
+        // Add cursor parameters if provided
+        if let lastCreatedAt = lastCreatedAt, let lastId = lastId {
+            let encodedDate = lastCreatedAt.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? lastCreatedAt
+            endpoint += "&lastCreatedAt=\(encodedDate)&lastId=\(lastId)"
+        }
+        
+        return try await request(
+            endpoint: endpoint,
+            method: "GET",
+            authenticated: true
+        )
+    }
+    
     // MARK: - Helper Methods
     
     private func getUsername() async -> String {
